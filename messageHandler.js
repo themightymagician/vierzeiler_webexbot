@@ -9,8 +9,14 @@ if (!fs.existsSync(subscribedFile)) {
 }
 
 function getSubscribers() {
-  const raw = fs.readFileSync(subscribedFile);
-  return JSON.parse(raw);
+  if (!fs.existsSync(subscribedFile)) {
+    return [];
+  }
+
+  const raw = fs.readFileSync(subscribedFile, 'utf8');
+  if (!raw) return [];
+
+  return JSON.parse(raw).filter(Boolean);
 }
 
 function saveSubscribers(list) {
@@ -33,3 +39,4 @@ module.exports = {
     saveSubscribers(list);
   }
 };
+
