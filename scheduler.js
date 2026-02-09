@@ -2,20 +2,15 @@ const cron = require('node-cron');
 const sendVierzeiler = require('./sendVierzeiler');
 const { getSubscribers } = require('./messageHandler');
 
-cron.schedule('0 9 * * 1', () => {
-  const users = getSubscribers();
+cron.schedule('0 9 * * 1', async () => {
+  const users = await getSubscribers();
 
   if (!users.length) {
-    console.log("ℹ️ Keine abonnierten Nutzer");
+    console.log('ℹ️ Keine Abonnenten');
     return;
   }
 
-  users.forEach(email => {
-    if (email) {
-      sendVierzeiler(email);
-    } else {
-      console.warn("⚠️ Leerer Eintrag in Subscriber-Liste");
-    }
-  });
+  for (const email of users) {
+    await sendVierzeiler(email);
+  }
 });
-
