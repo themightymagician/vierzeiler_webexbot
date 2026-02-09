@@ -5,7 +5,7 @@ async function sendVierzeiler(email) {
   const text = getVierzeiler();
 
   await webex.post('/messages', {
-    toPersonEmail: tyllack@dkms.de,
+    toPersonEmail: email,
     text
   });
 
@@ -13,3 +13,4 @@ async function sendVierzeiler(email) {
 }
 
 module.exports = sendVierzeiler;
+
