@@ -4,7 +4,7 @@ module.exports = {
   async addSubscriber(email) {
     try {
       const res = await db.query(
-        'INSERT INTO subscribers(email) VALUES($1) ON CONFLICT DO NOTHING',
+        'INSERT INTO subscribers2(email) VALUES($1) ON CONFLICT DO NOTHING',
         [email]
       );
       return res.rowCount > 0;
@@ -17,7 +17,7 @@ module.exports = {
   async removeSubscriber(email) {
     try {
       await db.query(
-        'DELETE FROM subscribers WHERE email = $1',
+        'DELETE FROM subscribers2 WHERE email = $1',
         [email]
       );
     } catch (err) {
@@ -28,7 +28,7 @@ module.exports = {
   async getSubscribers() {
     try {
       const res = await db.query(
-        'SELECT email FROM subscribers'
+        'SELECT email FROM subscribers2'
       );
       return res.rows.map(r => r.email);
     } catch (err) {
@@ -37,3 +37,4 @@ module.exports = {
     }
   }
 };
+
