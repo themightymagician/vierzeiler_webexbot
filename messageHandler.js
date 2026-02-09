@@ -1,42 +1,39 @@
-const fs = require('fs');
-const path = require('path');
-
-const subscribedFile = path.join(__dirname, 'subscribed.json');
-
-// Stellen sicher, dass Datei existiert
-if (!fs.existsSync(subscribedFile)) {
-  fs.writeFileSync(subscribedFile, JSON.stringify([]));
-}
-
-function getSubscribers() {
-  if (!fs.existsSync(subscribedFile)) {
-    return [];
-  }
-
-  const raw = fs.readFileSync(subscribedFile, 'utf8');
-  if (!raw) return [];
-
-  return JSON.parse(raw).filter(Boolean);
-}
-
-function saveSubscribers(list) {
-  fs.writeFileSync(subscribedFile, JSON.stringify(list, null, 2));
-}
+const db = require('./db');
 
 module.exports = {
-  getSubscribers,
-  addSubscriber(email) {
-    const list = getSubscribers();
-    if (!list.includes(email)) {
-      list.push(email);
-      saveSubscribers(list);
-      return true;
+  async addSubscriber(email) {
+    try {
+      const res = await db.query(
+        'INSERT INTO subscribers(email) VALUES($1) ON CONFLICT DO NOTHING',
+        [email]
+      );
+      return res.rowCount > 0;
+    } catch (err) {
+      console.error('DB addSubscriber error', err.message);
+      return false;
     }
-    return false;
   },
-  removeSubscriber(email) {
-    const list = getSubscribers().filter(e => e !== email);
-    saveSubscribers(list);
+
+  async removeSubscriber(email) {
+    try {
+      await db.query(
+        'DELETE FROM subscribers WHERE email = $1',
+        [email]
+      );
+    } catch (err) {
+      console.error('DB removeSubscriber error', err.message);
+    }
+  },
+
+  async getSubscribers() {
+    try {
+      const res = await db.query(
+        'SELECT email FROM subscribers'
+      );
+      return res.rows.map(r => r.email);
+    } catch (err) {
+      console.error('DB getSubscribers error', err.message);
+      return [];
+    }
   }
 };
-
