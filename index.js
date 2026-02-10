@@ -42,8 +42,8 @@ async function handleMessage(msg) {
       if (added) {
         await sendMessage(email, 'Du bist jetzt angemeldet!');
 
-        // Sofort den aktuellen Vierzeiler senden
-        const vierzeiler = getCurrentVierzeiler();
+        // ✅ Hier unbedingt await verwenden
+        const vierzeiler = await getCurrentVierzeiler();
         await sendMessage(email, `Hier ist dein Vierzeiler der Woche:\n\n${vierzeiler}`);
       } else {
         await sendMessage(email, 'Du bist bereits angemeldet.');
@@ -78,7 +78,7 @@ app.post('/webhook', async (req, res) => {
 cron.schedule('0 9 * * 1', async () => {
   try {
     const subscribers = await getSubscribers(); // aus DB
-    const vierzeiler = getCurrentVierzeiler();
+    const vierzeiler = await getCurrentVierzeiler(); //aus DB
 
     for (const email of subscribers) {
       await sendMessage(email, `Neuer Vierzeiler der Woche:\n\n${vierzeiler}`);
@@ -95,5 +95,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Webhook-Server läuft auf Port ${PORT}`);
 });
-
-
