@@ -1,3 +1,5 @@
+// vierzeiler.js
+
 const vierzeiler = [
   "Sekundenkleber klebt Sekunden.\n",
   "Erst zu Minuten, dann zu Stunden.\n",
@@ -5,4 +7,9 @@ const vierzeiler = [
   "auch Jahre und die Ewigkeit."
 ];
 
-module.exports = () => vierzeiler.join('');
+// Funktion zum Abrufen des aktuellen Vierzeilers
+function getCurrentVierzeiler() {
+  return vierzeiler.join('');
+}
+
+module.exports = { getCurrentVierzeiler };
