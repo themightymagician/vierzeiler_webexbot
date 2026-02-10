@@ -19,10 +19,15 @@ const webex = axios.create({
   }
 });
 
-// Hilfsfunktion: Nachricht senden
+// Hilfsfunktion: Nachricht senden (Markdown für Zeilenumbrüche)
 async function sendMessage(email, text) {
   try {
-    await webex.post('/messages', { toPersonEmail: email, text });
+    // Wandelt \n zu echten Zeilenumbrüchen um
+    const formattedText = text.replace(/\\n/g, '\n');
+    await webex.post('/messages', {
+      toPersonEmail: email,
+      markdown: formattedText
+    });
   } catch (err) {
     console.error(`Fehler beim Senden der Nachricht an ${email}:`, err.response?.data || err.message);
   }
@@ -40,11 +45,11 @@ async function handleMessage(msg) {
       const added = await addSubscriber(email);
 
       if (added) {
-        await sendMessage(email, 'Du bist jetzt angemeldet!');
+        await sendMessage(email, '**Du bist jetzt angemeldet!**');
 
-        // ✅ Hier unbedingt await verwenden
+        // Vierzeiler sofort senden
         const vierzeiler = await getCurrentVierzeiler();
-        await sendMessage(email, `Hier ist dein Vierzeiler der Woche:\n\n${vierzeiler}`);
+        await sendMessage(email, `**Hier ist dein Vierzeiler der Woche:**\n\n${vierzeiler}`);
       } else {
         await sendMessage(email, 'Du bist bereits angemeldet.');
       }
@@ -79,10 +84,13 @@ cron.schedule('0 9 * * 1', async () => {
   try {
     const subscribers = await getSubscribers(); // aus DB
     const vierzeiler = await getCurrentVierzeiler();
-    const formattedVierzeiler = vierzeiler.replace(/\\n/g, '\n'); // \\n → echte Zeilenumbrüche
+    const formattedVierzeiler = vierzeiler.replace(/\\n/g, '\n');
 
     for (const email of subscribers) {
-      await sendMessage(email, `Neuer Vierzeiler der Woche:\n\n${formattedVierzeiler}`);
+      await webex.post('/messages', {
+        toPersonEmail: email,
+        markdown: `**Neuer Vierzeiler der Woche:**\n\n${formattedVierzeiler}`
+      });
     }
 
     console.log('Wöchentlicher Vierzeiler wurde gesendet.');
@@ -96,4 +104,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Webhook-Server läuft auf Port ${PORT}`);
 });
-
