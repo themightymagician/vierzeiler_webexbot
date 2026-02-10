@@ -14,7 +14,7 @@ app.use(bodyParser.json());
 const webex = axios.create({
   baseURL: 'https://webexapis.com/v1',
   headers: {
-    Authorization: `Bearer ${process.env.WEBEX_BOT_TOKEN}`, // ⚠️ unbedingt "Bearer " davor
+    Authorization: `${process.env.WEBEX_BOT_TOKEN}`,
     'Content-Type': 'application/json'
   }
 });
@@ -96,3 +96,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Webhook-Server läuft auf Port ${PORT}`);
 });
+
