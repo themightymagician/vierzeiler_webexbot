@@ -9,4 +9,8 @@ const webex = axios.create({
   }
 });
 
+const pollMessages = require('./listener');
+pollMessages(); // Polling starten
+
 module.exports = webex;
+
