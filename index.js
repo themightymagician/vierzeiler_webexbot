@@ -78,10 +78,11 @@ app.post('/webhook', async (req, res) => {
 cron.schedule('0 9 * * 1', async () => {
   try {
     const subscribers = await getSubscribers(); // aus DB
-    const vierzeiler = await getCurrentVierzeiler(); //aus DB
+    const vierzeiler = await getCurrentVierzeiler();
+    const formattedVierzeiler = vierzeiler.replace(/\\n/g, '\n'); // \\n → echte Zeilenumbrüche
 
     for (const email of subscribers) {
-      await sendMessage(email, `Neuer Vierzeiler der Woche:\n\n${vierzeiler}`);
+      await sendMessage(email, `Neuer Vierzeiler der Woche:\n\n${formattedVierzeiler}`);
     }
 
     console.log('Wöchentlicher Vierzeiler wurde gesendet.');
@@ -95,3 +96,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Webhook-Server läuft auf Port ${PORT}`);
 });
+
