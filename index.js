@@ -21,14 +21,29 @@ async function handleMessage(msg) {
 
   try {
     if (text === 'anmelden') {
-      const added = await addSubscriber(email);
-      await webex.post('/messages', {
-        toPersonEmail: email,
-        text: added
-          ? 'Du bist jetzt angemeldet!'
-          : 'Du bist bereits angemeldet.'
-      });
-    } else if (text === 'abbestellen' || text === 'abmelden') {
+  const added = await addSubscriber(email);
+
+  // Begrüßung / Vierzeiler sofort senden
+  if (added) {
+    await webex.post('/messages', {
+      toPersonEmail: email,
+      text: 'Du bist jetzt angemeldet!'
+    });
+
+    // Vierzeiler der Woche holen und senden
+    const { getCurrentVierzeiler } = require('./vierzeiler');
+    const vierzeiler = getCurrentVierzeiler();
+    await webex.post('/messages', {
+      toPersonEmail: email,
+      text: `Hier ist dein Vierzeiler der Woche:\n\n${vierzeiler}`
+    });
+  } else {
+    await webex.post('/messages', {
+      toPersonEmail: email,
+      text: 'Du bist bereits angemeldet.'
+    });
+  }
+    }else if (text === 'abbestellen' || text === 'abmelden') {
       await removeSubscriber(email);
       await webex.post('/messages', {
         toPersonEmail: email,
@@ -63,5 +78,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Webhook-Server läuft auf Port ${PORT}`);
 });
+
 
 
