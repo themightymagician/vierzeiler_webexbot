@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const cron = require('node-cron');
 
-const { addSubscriber, removeSubscriber, getAllSubscribers } = require('./messageHandler');
+const { addSubscriber, removeSubscriber, getSubscribers } = require('./messageHandler');
 const { getCurrentVierzeiler } = require('./vierzeiler');
 
 const app = express();
@@ -19,7 +19,7 @@ const webex = axios.create({
   }
 });
 
-// Funktion zum Senden einer Nachricht an eine E-Mail-Adresse
+// Hilfsfunktion: Nachricht senden
 async function sendMessage(email, text) {
   try {
     await webex.post('/messages', { toPersonEmail: email, text });
@@ -28,7 +28,7 @@ async function sendMessage(email, text) {
   }
 }
 
-// Verarbeitung von eingehenden Nachrichten
+// Verarbeitung von Nachrichten
 async function handleMessage(msg) {
   if (!msg || !msg.text || !msg.personEmail) return;
 
@@ -42,7 +42,7 @@ async function handleMessage(msg) {
       if (added) {
         await sendMessage(email, 'Du bist jetzt angemeldet!');
 
-        // Sofort den Vierzeiler senden
+        // Sofort den aktuellen Vierzeiler senden
         const vierzeiler = getCurrentVierzeiler();
         await sendMessage(email, `Hier ist dein Vierzeiler der Woche:\n\n${vierzeiler}`);
       } else {
@@ -64,7 +64,6 @@ app.post('/webhook', async (req, res) => {
   if (!msgId) return res.status(400).send('No message ID');
 
   try {
-    // Nachricht von Webex abrufen
     const response = await webex.get(`/messages/${msgId}`);
     const msg = response.data;
     await handleMessage(msg);
@@ -75,14 +74,14 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-// Cron-Job: Jeden Montag um 09:00 Uhr den Vierzeiler an alle Abonnenten senden
+// Cron-Job: Jeden Montag um 09:00 Uhr
 cron.schedule('0 9 * * 1', async () => {
   try {
-    const subscribers = await getAllSubscribers(); // [{email: 'user@xyz'}, ...]
+    const subscribers = await getSubscribers(); // aus DB
     const vierzeiler = getCurrentVierzeiler();
 
-    for (const user of subscribers) {
-      await sendMessage(user.email, `Neuer Vierzeiler der Woche:\n\n${vierzeiler}`);
+    for (const email of subscribers) {
+      await sendMessage(email, `Neuer Vierzeiler der Woche:\n\n${vierzeiler}`);
     }
 
     console.log('Wöchentlicher Vierzeiler wurde gesendet.');
@@ -91,9 +90,10 @@ cron.schedule('0 9 * * 1', async () => {
   }
 });
 
-// Starten des Servers
+// Server starten
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Webhook-Server läuft auf Port ${PORT}`);
 });
+
 
