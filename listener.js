@@ -1,4 +1,4 @@
-const webex = require('./index'); // dein Webex-Client
+const webex = require('./index');
 const { addSubscriber, removeSubscriber } = require('./messageHandler');
 
 async function handleMessage(msg) {
@@ -44,15 +44,14 @@ async function pollMessages() {
       const items = res.data.items;
       if (!items.length) return;
 
-      // Parallele Verarbeitung aller Nachrichten
       await Promise.all(items.map(msg => handleMessage(msg)));
 
-      // Setze den letzten Zeitstempel nach der neuesten Nachricht
+      // Letzten Zeitstempel auf die neueste Nachricht setzen
       lastTimestamp = items[items.length - 1].created;
     } catch (err) {
       console.error('Fehler beim Polling:', err);
     }
-  }, 5000);
+  }, 5000); // alle 5 Sekunden
 }
 
 module.exports = pollMessages;
