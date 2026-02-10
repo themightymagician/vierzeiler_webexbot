@@ -2,12 +2,10 @@ const webex = require('./index'); // dein Webex-Client
 const { addSubscriber, removeSubscriber } = require('./messageHandler');
 
 async function handleMessage(msg) {
-  if (!msg || !msg.text) return; // Sicherheit
+  if (!msg || !msg.text || !msg.personEmail) return;
 
   const text = msg.text.toLowerCase();
   const email = msg.personEmail;
-
-  if (!email) return; // keine E-Mail, nichts tun
 
   try {
     if (text === 'anmelden') {
@@ -18,9 +16,7 @@ async function handleMessage(msg) {
           ? 'Du bist jetzt angemeldet!'
           : 'Du bist bereits angemeldet.'
       });
-    }
-
-    if (text === 'abbestellen' || text === 'abmelden') {
+    } else if (text === 'abbestellen' || text === 'abmelden') {
       await removeSubscriber(email);
       await webex.post('/messages', {
         toPersonEmail: email,
@@ -28,7 +24,7 @@ async function handleMessage(msg) {
       });
     }
   } catch (err) {
-    console.error('Fehler beim Verarbeiten der Nachricht:', err);
+    console.error(`Fehler beim Verarbeiten der Nachricht von ${email}:`, err);
   }
 }
 
@@ -48,18 +44,15 @@ async function pollMessages() {
       const items = res.data.items;
       if (!items.length) return;
 
-      // Nachrichten nacheinander verarbeiten
-      for (const msg of items) {
-        await handleMessage(msg);
-      }
+      // Parallele Verarbeitung aller Nachrichten
+      await Promise.all(items.map(msg => handleMessage(msg)));
 
-      // letzten Zeitstempel auf die neueste Nachricht setzen
+      // Setze den letzten Zeitstempel nach der neuesten Nachricht
       lastTimestamp = items[items.length - 1].created;
     } catch (err) {
       console.error('Fehler beim Polling:', err);
     }
-  }, 5000); // alle 5 Sekunden
+  }, 5000);
 }
 
-// Exportiere die Polling-Funktion
 module.exports = pollMessages;
