@@ -42,6 +42,7 @@ async function handleMessage(msg) {
 
 // Webhook-Endpunkt
 app.post('/webhook', async (req, res) => {
+  console.log('Webhook empfangen:', req.body); // 🔍 Debug
   const msgId = req.body.data?.id;
   if (!msgId) return res.status(400).send('No message ID');
 
@@ -62,3 +63,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Webhook-Server läuft auf Port ${PORT}`);
 });
+
