@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const webex = require('axios').create({
   baseURL: 'https://webexapis.com/v1',
   headers: {
-    Authorization: `${process.env.WEBEX_TOKEN}`,
+    Authorization: `${process.env.WEBEX_BOT_TOKEN}`,
     'Content-Type': 'application/json'
   }
 });
@@ -63,4 +63,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Webhook-Server läuft auf Port ${PORT}`);
 });
+
 
