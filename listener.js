@@ -1,6 +1,22 @@
-const webex = require('./webexClient');
+require('dotenv').config();
+const express = require('express');
+const bodyParser = require('body-parser');
+const axios = require('axios');
 const { addSubscriber, removeSubscriber } = require('./messageHandler');
 
+const app = express();
+app.use(bodyParser.json());
+
+// Webex-Client
+const webex = axios.create({
+  baseURL: 'https://webexapis.com/v1',
+  headers: {
+    Authorization: `${process.env.WEBEX_TOKEN}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+// Nachricht verarbeiten
 async function handleMessage(msg) {
   if (!msg || !msg.text || !msg.personEmail) return;
 
@@ -28,31 +44,27 @@ async function handleMessage(msg) {
   }
 }
 
-async function pollMessages() {
-  let lastTimestamp = new Date().toISOString();
+// Webhook-Endpunkt
+app.post('/webhook', async (req, res) => {
+  const msgId = req.body.data?.id;
+  if (!msgId) return res.status(400).send('No message ID');
 
-  setInterval(async () => {
-    try {
-      const res = await webex.get('/messages', {
-        params: {
-          max: 50,
-          mentionedPeople: 'me',
-          from: lastTimestamp
-        }
-      });
+  try {
+    // Nachricht von Webex abrufen
+    const response = await webex.get(`/messages/${msgId}`);
+    const msg = response.data;
 
-      const items = res.data.items;
-      if (!items.length) return;
+    await handleMessage(msg);
 
-      await Promise.all(items.map(msg => handleMessage(msg)));
+    res.status(200).send('OK');
+  } catch (err) {
+    console.error('Fehler beim Verarbeiten des Webhooks:', err);
+    res.status(500).send('Error');
+  }
+});
 
-      // Letzten Zeitstempel auf die neueste Nachricht setzen
-      lastTimestamp = items[items.length - 1].created;
-    } catch (err) {
-      console.error('Fehler beim Polling:', err);
-    }
-  }, 5000); // alle 5 Sekunden
-}
-
-module.exports = pollMessages;
-
+// Server starten
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Webhook-Server läuft auf Port ${PORT}`);
+});
