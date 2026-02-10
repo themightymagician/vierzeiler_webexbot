@@ -1,4 +1,4 @@
-const webex = require('./index');
+const webex = require('./webexClient');
 const { addSubscriber, removeSubscriber } = require('./messageHandler');
 
 async function handleMessage(msg) {
@@ -55,3 +55,4 @@ async function pollMessages() {
 }
 
 module.exports = pollMessages;
+
