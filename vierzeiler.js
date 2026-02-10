@@ -1,15 +1,22 @@
-// vierzeiler.js
+const db = require('./db');
 
-const vierzeiler = [
-  "Sekundenkleber klebt Sekunden.\n",
-  "Erst zu Minuten, dann zu Stunden.\n",
-  "So entstehen mit der Zeit\n",
-  "auch Jahre und die Ewigkeit."
-];
+async function getCurrentVierzeiler() {
+  const today = new Date();
+  const oneJan = new Date(today.getFullYear(), 0, 1);
+  const dayOfYear = ((today - oneJan + 86400000) / 86400000);
+  const weekNumber = Math.ceil((dayOfYear + oneJan.getDay()) / 7);
 
-// Funktion zum Abrufen des aktuellen Vierzeilers
-function getCurrentVierzeiler() {
-  return vierzeiler.join('');
+  try {
+    const res = await db.query(
+      'SELECT text FROM vierzeiler WHERE week = $1 LIMIT 1',
+      [weekNumber]
+    );
+    if (res.rows.length > 0) return res.rows[0].text;
+    return 'Der aktuelle Vierzeiler ist noch nicht gesetzt.';
+  } catch (err) {
+    console.error('DB getCurrentVierzeiler error', err.message);
+    return 'Fehler beim Abrufen des Vierzeilers.';
+  }
 }
 
 module.exports = { getCurrentVierzeiler };
